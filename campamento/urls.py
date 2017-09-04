@@ -21,5 +21,5 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^api/auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^api/docs/', include_docs_urls(title='Campamento base')),
-    url(r'^api/', include('base.urls', namespace='campamento'))
+    url(r'^api/', include('base.urls'))
 ]

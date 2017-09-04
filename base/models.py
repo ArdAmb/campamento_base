@@ -46,7 +46,12 @@ class ValueSensorSeta(models.Model):
         return self.value
 
     def clean(self):
-        if self.sensor.tipo == TYPE_INT:
+        if not self.seta.sensors.filter(pk=self.sensor.id).exists():
+            raise ValidationError(
+                _('%(sensor)s is not valid for %(seta)s'),
+                params={'sensor': self.sensor, 'seta': self.seta},
+            )
+        if self.sensor.sensor_type == TYPE_INT:
             try:
                 return int(self.value)
             except:
@@ -54,7 +59,7 @@ class ValueSensorSeta(models.Model):
                     _('%(value)s is not a integer'),
                     params={'value': self.value},
                 )
-        elif self.sensor.tipo == TYPE_FLOAT:
+        elif self.sensor.sensor_type == TYPE_FLOAT:
             try:
                 return float(self.value)
             except:
@@ -64,8 +69,8 @@ class ValueSensorSeta(models.Model):
                 )
 
     def get_value(self):
-        if self.sensor.tipo == TYPE_INT:
+        if self.sensor.sensor_type == TYPE_INT:
             return int(self.value)
-        elif self.sensor.tipo == TYPE_FLOAT:
+        elif self.sensor.sensor_type == TYPE_FLOAT:
             return float(self.value)
         return self.value
