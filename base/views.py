@@ -36,4 +36,4 @@ class ValueSensorSetaViewSet(mixins.CreateModelMixin,
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filter_fields = ('seta__id', 'seta__name', 'sensor__id', 'sensor__name')
     ordering_fields = ('date', )
-    ordering = ('date', )
+    ordering = ('-date', )
