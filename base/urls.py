@@ -13,4 +13,5 @@ router.register(r'value', ValueSensorSetaViewSet)
 
 urlpatterns = [
     url(r'', include(router.urls)),
+    url(r'^bulk/(?P<seta_pk>[^/.]+)/$', BulkValuesAPIView.as_view()),
 ]

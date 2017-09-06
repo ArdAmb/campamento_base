@@ -5,6 +5,9 @@ from base.models import *
 from rest_framework import serializers
 from django.utils.translation import ugettext as _
 from rest_framework.exceptions import ValidationError
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class SensorNameSerializer(serializers.HyperlinkedModelSerializer):
@@ -38,6 +41,16 @@ class SetaSerializer(serializers.HyperlinkedModelSerializer):
         fields = '__all__'
 
 
+class DynamicValueSensorSetaSerializer(serializers.HyperlinkedModelSerializer):
+    sensor_name = serializers.CharField(source='sensor.name',
+                                        help_text='Field with name of the sensor and values for this sensor',
+                                        style={'template': 'campamento/dynamic-input.html'})
+
+    class Meta:
+        model = ValueSensorSeta
+        fields = ('id', 'sensor_name')
+
+
 class ValueSensorSetaSerializer(serializers.HyperlinkedModelSerializer):
     sensor = SensorNameSerializer()
     seta = SetaNameSerializer()
@@ -69,16 +82,17 @@ class ValueSensorSetaSerializer(serializers.HyperlinkedModelSerializer):
         try:
             serializers.HyperlinkedModelSerializer.is_valid(self, raise_exception=raise_exception)
         except ValidationError, ex:
-            if ex.detail.get('seta') and setas is not None:
-                if num_setas > 1:
-                    ex.detail['seta'] = [_('Multiples options')]
-                elif num_setas == 0:
-                    ex.detail['seta'] = [_('Not found')]
-            if ex.detail.get('sensor') and sensores is not None:
-                if num_sensores > 1:
-                    ex.detail['sensor'] = [_('Multiples options')]
-                elif num_sensores == 0:
-                    ex.detail['sensor'] = [_('Not found')]
+            if hasattr(ex, 'detail'):
+                if ex.detail.get('seta') and setas is not None:
+                    if num_setas > 1:
+                        ex.detail['seta'] = [_('Multiples options')]
+                    elif num_setas == 0:
+                        ex.detail['seta'] = [_('Not found')]
+                if ex.detail.get('sensor') and sensores is not None:
+                    if num_sensores > 1:
+                        ex.detail['sensor'] = [_('Multiples options')]
+                    elif num_sensores == 0:
+                        ex.detail['sensor'] = [_('Not found')]
             raise ex
 
         seta = self.fields['seta'].instance
@@ -87,6 +101,7 @@ class ValueSensorSetaSerializer(serializers.HyperlinkedModelSerializer):
             has_sensor = seta.sensors.filter(pk=sensor.pk)
             if not has_sensor.exists():
                 self._errors = {'seta': [_('Sensor "{}" not supported').format(sensor.name)]}
+                logger.error('Sensor "{}" not supported for {}'.format(sensor.name, seta.name))
 
             self.validated_data['seta'] = self.fields['seta'].instance
             self.validated_data['sensor'] = self.fields['sensor'].instance

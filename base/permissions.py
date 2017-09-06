@@ -1,4 +1,5 @@
 from rest_framework.permissions import IsAuthenticated
+from django.conf import settings
 import ipaddress
 import six
 
@@ -9,7 +10,11 @@ class LocalOrIsAuthenticated(IsAuthenticated):
 
     @staticmethod
     def is_local(ip):
-        return ipaddress.ip_address(six.u(ip)).is_private
+        net_ip = ipaddress.ip_address(six.u(ip))
+        if hasattr(settings, 'LOCAL_NETWORK'):
+            net = ipaddress.ip_network(six.u(settings.LOCAL_NETWORK))
+            return net_ip in net.hosts()
+        return net_ip.is_private
 
     @staticmethod
     def is_proxy(request):

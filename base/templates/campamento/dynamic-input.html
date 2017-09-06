@@ -1,0 +1,47 @@
+<script type="application/javascript">
+    document.addEventListener("DOMContentLoaded", function(event) {
+        var base = $('#dynamic-sensor-base');
+        var container = $('#dynamic-sensor-list');
+        base.hide();
+        function remove_field(){
+            var self = $(this).parent('.dynamic-sensor');
+            self.remove();
+        }
+        function update_field_name() {
+            var field_name = $(this);
+            var p = field_name.parents('.dynamic-sensor');
+            var field = p.find('.dynamic-sensor-value');
+            field.attr('name', field_name.val());
+        }
+        function add_field() {
+            var base_copy = base.clone();
+            base_copy.attr('id', '').show();
+            container.append(base_copy);
+            var field_name = base_copy.find('.dynamic-sensor-field');
+            field_name.on('change', update_field_name);
+            // TODO add more events https://www.w3.org/TR/DOM-Level-3-Events/
+            var button = base_copy.find('button');
+            button.on('click', remove_field);
+        }
+        add_field();
+        var first = container.find('button');
+        first.removeClass('glyphicon-minus').addClass('glyphicon-plus');
+        first.off('click');
+        first.on('click', add_field);
+    });
+</script>
+<div id="dynamic-sensor-base" class="dynamic-sensor form-group {% if field.errors %}has-error{% endif %}">
+  <label class="col-sm-2 control-label {% if style.hide_label %}sr-only{% endif %}">
+    <input class="dynamic-sensor-field form-control" placeholder="sensor_name" />
+  </label>
+
+  <div class="col-sm-8">
+    <input class="dynamic-sensor-value form-control" placeholder="value" />
+
+    {% if field.help_text %}
+      <span class="help-block">{{ field.help_text|safe }}</span>
+    {% endif %}
+  </div>
+  <button type="button" class="btn btn-default glyphicon glyphicon-minus"></button>
+</div>
+<div id="dynamic-sensor-list" class="form-group {% if field.errors %}has-error{% endif %}"></div>
