@@ -40,7 +40,7 @@ class ValueSensorSeta(models.Model):
     date = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ('date', )
+        ordering = ('-date', )
 
     def __str__(self):
         return self.value

@@ -26,7 +26,7 @@ SECRET_KEY = 'xrc$%qnatdl#s-^&j#_!$pjs6$hayez*0&le%bom)dh$s*rs^p'
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
+TELEGRAM_TOKEN = ''
 
 # Application definition
 
@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'django_extensions',
     'django_filters',
     'rest_framework',
-    'base'
+    'base',
+    'base.remote',
 ]
 
 LOCAL_NETWORK = '192.168.0.0/24'
@@ -56,8 +57,6 @@ MIDDLEWARE = [
 ]
 
 REST_FRAMEWORK = {
-    # Use Django's standard `django.contrib.auth` permissions,
-    # or allow read-only access for unauthenticated users.
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
     ),
@@ -68,7 +67,8 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
     ),
-    'PAGINATE_BY': 10,
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 10,
 }
 
 ROOT_URLCONF = 'campamento.urls'
@@ -140,3 +140,27 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': True,
+        },
+        'remote_control': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': True,
+        },
+    },
+}
