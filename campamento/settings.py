@@ -26,7 +26,7 @@ SECRET_KEY = 'xrc$%qnatdl#s-^&j#_!$pjs6$hayez*0&le%bom)dh$s*rs^p'
 DEBUG = True
 
 ALLOWED_HOSTS = []
-TELEGRAM_TOKEN = ''
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN', '')
 
 # Application definition
 
@@ -57,6 +57,8 @@ MIDDLEWARE = [
 ]
 
 REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
     ),
