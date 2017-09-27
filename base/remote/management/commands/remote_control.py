@@ -26,11 +26,9 @@ PAG_SIZE = 10
 class Command(BaseCommand):
     help = _('Allow consume data using telegram')
     stack_keypads = {}
-    pad_size = PAG_SIZE
 
     def add_arguments(self, parser):
         parser.add_argument('token', nargs='?', type=str, default='')
-        parser.add_argument('pad_size', nargs='?', type=int, default=PAG_SIZE)
 
     def handle(self, *args, **options):
         token = options['token']
@@ -39,7 +37,6 @@ class Command(BaseCommand):
                 token = settings.TELEGRAM_TOKEN
             else:
                 raise CommandError('Token required on settings or as parameter')
-        self.pad_size = options['pad_size']
 
         updater = Updater(token)
 
@@ -107,7 +104,7 @@ class Command(BaseCommand):
             self.stack_keypads[str(chat.id)] = bot.send_message(
                 chat.id,
                 _('Choose option:'),
-                reply_markup=self.get_pad(clase, 0)
+                reply_markup=self.get_pad(clase, 0, chat)
             )
 
     def keypad_callback(self, bot, update):
@@ -171,16 +168,20 @@ class Command(BaseCommand):
                 if str(chat.id) in self.stack_keypads:
                     del(self.stack_keypads[str(chat.id)])
                 return
-            msg.edit_reply_markup(reply_markup=self.get_pad(clase, int(page)))
+            msg.edit_reply_markup(reply_markup=self.get_pad(clase, int(page), chat))
 
         if message:
             logger.info(message)
             bot.send_message(chat.id, message)
 
-    def get_pad(self, clase, page):
+    def get_pad(self, clase, page, chat):
         button_list = []
-        init = page * self.pad_size
-        end = init + self.pad_size
+        if not RemoteChat.objects.by_chat(chat).count() != 1:
+            return
+        remote_chat = RemoteChat.objects.by_chat(chat).get()
+        pad_size = remote_chat.items_per_page
+        init = page * pad_size
+        end = init + pad_size
 
         if clase == 'seta':
             queryset = Seta.objects.all()[init:end]

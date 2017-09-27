@@ -20,12 +20,12 @@ TYPE_CHAT = (
 
 
 class RemoteChatManager(models.Manager):
-    def allowed(self, chat):
+    def by_chat(self, chat):
         """
         :param chat:
-        :type chat: Chat
+        :type chat: telegram.chat.Chat
         :return:
-        :rtype: bool
+        :rtype: QuerySet
         """
         chat_type = None
         if chat.type == Chat.PRIVATE:
@@ -36,13 +36,23 @@ class RemoteChatManager(models.Manager):
             chat_type = TYPE_SUPERGROUP
         elif chat.type == Chat.CHANNEL:
             chat_type = TYPE_CHANNEL
-        return self.get_queryset().filter(chat_id=chat.id, chat_type=chat_type).exists()
+        return self.get_queryset().filter(chat_id=chat.id, chat_type=chat_type)
+
+    def allowed(self, chat):
+        """
+        :param chat:
+        :type chat: telegram.chat.Chat
+        :return:
+        :rtype: bool
+        """
+        return self.by_chat(chat).exists()
 
 
 class RemoteChat(models.Model):
     name = models.CharField(max_length=512)
     chat_id = models.CharField(max_length=64)
     chat_type = models.IntegerField(choices=TYPE_CHAT, default=TYPE_PRIVATE)
+    items_per_page = models.IntegerField(default=10)
 
     objects = RemoteChatManager()
 
@@ -56,7 +66,7 @@ class RemoteChat(models.Model):
         """
         :param kwargs: Used to create the Telegram chat
         :return: Telegram chat
-        :rtype: Chat
+        :rtype: telegram.chat.Chat
         """
         chat_type = None
         if self.chat_type == TYPE_PRIVATE:
