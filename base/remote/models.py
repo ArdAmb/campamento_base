@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from telegram.chat import Chat
-from django.utils.translation import ugettext as _
 from django.db import models
-
+from django.utils.translation import ugettext as _
+from telegram.chat import Chat
 
 TYPE_PRIVATE = 0
 TYPE_GROUP = 1

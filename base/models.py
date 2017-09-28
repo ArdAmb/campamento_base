@@ -2,9 +2,8 @@
 from __future__ import unicode_literals
 
 from django.core.exceptions import ValidationError
-from django.utils.translation import ugettext as _
 from django.db import models
-
+from django.utils.translation import ugettext as _
 
 TYPE_INT = 0
 TYPE_FLOAT = 1
@@ -40,7 +39,7 @@ class ValueSensorSeta(models.Model):
     date = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ('-date', )
+        ordering = ('-date',)
 
     def __str__(self):
         return self.value

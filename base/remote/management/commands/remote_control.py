@@ -1,22 +1,24 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from base.models import Seta, Sensor, ValueSensorSeta
-from base.remote.models import RemoteChat
+import logging
+
+from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.utils.translation import ugettext as _
-from django.conf import settings
-from telegram.parsemode import ParseMode
+from telegram import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+)
 from telegram.ext import (
     Updater,
     CommandHandler,
     CallbackQueryHandler,
 )
-from telegram import (
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-)
-import logging
+from telegram.parsemode import ParseMode
+
+from base.models import Seta, Sensor, ValueSensorSeta
+from base.remote.models import RemoteChat
 
 logger = logging.getLogger('remote_control')
 
@@ -84,7 +86,9 @@ class Command(BaseCommand):
         if logger.isEnabledFor(logging.INFO):
             user = update.effective_user
             logger.info('List {cmd} for {name}'.format(cmd=command, name=user.first_name))
-        if RemoteChat.objects.allowed(chat):
+        if not RemoteChat.objects.allowed(chat):
+            bot.send_message(chat.id, _('Not registered'))
+        else:
             if command.startswith('/seta'):
                 clase = 'seta'
             elif command.startswith('/sensor'):
@@ -97,7 +101,7 @@ class Command(BaseCommand):
             if str(chat.id) in self.stack_keypads:
                 message = self.stack_keypads[str(chat.id)]
                 bot.delete_message(chat.id, message.message_id)
-                del(self.stack_keypads[str(chat.id)])
+                del self.stack_keypads[str(chat.id)]
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Clean old message')
 
@@ -166,7 +170,7 @@ class Command(BaseCommand):
             elif action == 'cancel':
                 bot.delete_message(chat.id, msg.message_id)
                 if str(chat.id) in self.stack_keypads:
-                    del(self.stack_keypads[str(chat.id)])
+                    del self.stack_keypads[str(chat.id)]
                 return
             msg.edit_reply_markup(reply_markup=self.get_pad(clase, int(page), chat))
 
@@ -176,7 +180,7 @@ class Command(BaseCommand):
 
     def get_pad(self, clase, page, chat):
         button_list = []
-        if not RemoteChat.objects.by_chat(chat).count() != 1:
+        if RemoteChat.objects.by_chat(chat).count() != 1:
             return
         remote_chat = RemoteChat.objects.by_chat(chat).get()
         pad_size = remote_chat.items_per_page
@@ -206,7 +210,7 @@ class Command(BaseCommand):
         if page > 0:
             pags.append(InlineKeyboardButton(
                 _('<<'),
-                callback_data='{clase}:prev:{page}'.format(clase=clase, page=page-1)
+                callback_data='{clase}:prev:{page}'.format(clase=clase, page=page - 1)
             ))
             page_actions = True
         else:
@@ -215,7 +219,7 @@ class Command(BaseCommand):
         if total > end:
             pags.append(InlineKeyboardButton(
                 _('>>'),
-                callback_data='{clase}:next:{page}'.format(clase=clase, page=page+1)
+                callback_data='{clase}:next:{page}'.format(clase=clase, page=page + 1)
             ))
             page_actions = True
         else:

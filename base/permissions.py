@@ -1,7 +1,10 @@
-from rest_framework.permissions import IsAuthenticated
-from django.conf import settings
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import ipaddress
 import six
+from django.conf import settings
+from rest_framework.permissions import IsAuthenticated
 
 
 class LocalOrIsAuthenticated(IsAuthenticated):

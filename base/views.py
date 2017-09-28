@@ -1,32 +1,31 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.views.decorators.csrf import csrf_exempt
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, mixins, generics, status
+from rest_framework.authentication import BasicAuthentication
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
-from rest_framework.authentication import BasicAuthentication
-from base.serializers import *
-from base.permissions import *
-from base.models import *
+
 from base.authentication import CsrfExemptSessionAuthentication
+from base.permissions import *
+from base.serializers import *
 
 
 class SensorViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Sensor.objects.all()
     serializer_class = SensorSerializer
 
-    filter_backends = (SearchFilter, )
-    search_fields = ('name', )
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
 
 
 class SetaViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Seta.objects.all()
     serializer_class = SetaSerializer
 
-    filter_backends = (SearchFilter, )
-    search_fields = ('name', )
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
 
 
 class ValueSensorSetaViewSet(mixins.CreateModelMixin,
@@ -39,8 +38,8 @@ class ValueSensorSetaViewSet(mixins.CreateModelMixin,
 
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filter_fields = ('seta__id', 'seta__name', 'sensor__id', 'sensor__name')
-    ordering_fields = ('date', )
-    ordering = ('-date', )
+    ordering_fields = ('date',)
+    ordering = ('-date',)
 
 
 class BulkValuesAPIView(generics.GenericAPIView):

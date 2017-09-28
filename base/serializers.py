@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from base.models import *
-from rest_framework import serializers
-from django.utils.translation import ugettext as _
-from rest_framework.exceptions import ValidationError
 import logging
+
+from django.utils.translation import ugettext as _
+from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+
+from base.models import *
 
 logger = logging.getLogger(__name__)
 
