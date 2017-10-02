@@ -25,7 +25,7 @@ SECRET_KEY = 'xrc$%qnatdl#s-^&j#_!$pjs6$hayez*0&le%bom)dh$s*rs^p'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['0.0.0.0', '192.168.0.108', '127.0.0.1', 'localhost']
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN', '')
 
 # Application definition
@@ -142,7 +142,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+MEDIA_ROOT = 'media'
 
+FILE_UPLOAD_HANDLERS = (
+    'django.core.files.uploadhandler.MemoryFileUploadHandler',
+    'django.core.files.uploadhandler.TemporaryFileUploadHandler',
+)
+FILE_UPLOAD_MAX_MEMORY_SIZE = 2621440
+FILE_UPLOAD_TEMP_DIR = '/tmp/'
 
 LOGGING = {
     'version': 1,

@@ -106,3 +106,5 @@ ENV/
 # Database
 *.sqlite3
 *.sqlite
+
+media/

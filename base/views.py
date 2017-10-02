@@ -6,6 +6,7 @@ from rest_framework import viewsets, mixins, generics, status
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser
 
 from base.authentication import CsrfExemptSessionAuthentication
 from base.permissions import *
@@ -42,7 +43,7 @@ class ValueSensorSetaViewSet(mixins.CreateModelMixin,
     ordering = ('-date',)
 
 
-class BulkValuesAPIView(generics.GenericAPIView):
+class MultipleValuesAPIView(generics.GenericAPIView):
     queryset = ValueSensorSeta.objects.none()
     serializer_class = DynamicValueSensorSetaSerializer
     permission_classes = (LocalOrIsAuthenticated,)
@@ -92,3 +93,49 @@ class BulkValuesAPIView(generics.GenericAPIView):
         if response['errors']:
             response_status = status.HTTP_202_ACCEPTED
         return Response(response, status=response_status)
+
+
+class BulkAPIView(mixins.CreateModelMixin,
+                  mixins.RetrieveModelMixin,
+                  mixins.ListModelMixin,
+                  generics.GenericAPIView):
+    queryset = BulkData.objects.none()
+    parser_classes = (MultiPartParser, )
+    permission_classes = (LocalOrIsAuthenticated,)
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+
+    def get_serializer(self, *args, **kwargs):
+        many = kwargs.get('many')
+        context = kwargs.get('context')
+        if many or context:
+            self.serializer_class = BulkDataSerializer
+        else:
+            self.serializer_class = NewBulkDataSerializer
+        return super(BulkAPIView, self).get_serializer(*args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        request._full_data = request.GET
+        seta_pk = kwargs.get('seta_pk')
+        if seta_pk:
+            self.queryset = BulkData.objects.filter(seta_id=seta_pk)
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+    def create(self, request, *args, **kwargs):
+        try:
+            #TODO check file format
+            serializer = self.get_serializer(
+                BulkData.objects.create(
+                    seta_id=kwargs.get('seta_pk'),
+                    datos=request.data.get('datos')
+                ),
+                context={'request': request}
+            )
+            response_status = status.HTTP_201_CREATED
+            return Response(serializer.data, status=response_status)
+        except Seta.DoesNotExist:
+            response_status = status.HTTP_404_NOT_FOUND
+            return Response({'seta': 'Not found'}, status=response_status)
+

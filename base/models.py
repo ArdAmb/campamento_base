@@ -73,3 +73,16 @@ class ValueSensorSeta(models.Model):
         elif self.sensor.sensor_type == TYPE_FLOAT:
             return float(self.value)
         return self.value
+
+
+class BulkData(models.Model):
+    seta = models.ForeignKey(Seta)
+    datos = models.FileField()
+    date = models.DateTimeField(auto_now=True)
+    processed = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ('-date',)
+
+    def __str__(self):
+        return "Bulk data {} for {}".format(self.pk, self.seta)

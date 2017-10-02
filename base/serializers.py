@@ -114,3 +114,17 @@ class ValueSensorSetaSerializer(serializers.HyperlinkedModelSerializer):
             raise ValidationError(self.errors)
 
         return not bool(self._errors)
+
+
+class BulkDataSerializer(serializers.ModelSerializer):
+    datos = serializers.CharField()
+
+    class Meta:
+        model = BulkData
+        exclude = ('seta', )
+
+
+class NewBulkDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BulkData
+        fields = ('datos', )
