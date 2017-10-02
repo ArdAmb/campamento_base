@@ -40,7 +40,7 @@ class Migration(migrations.Migration):
                 ('seta', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='base.Seta')),
             ],
             options={
-                'ordering': ('date',),
+                'ordering': ('-date',),
             },
         ),
     ]
