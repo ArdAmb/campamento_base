@@ -51,18 +51,24 @@ class Command(BaseCommand):
         dp.add_error_handler(self.error_callback)
 
         updater.start_polling()
+        self.stdout.write("Started\n")
         logging.info("Started")
         updater.idle()
 
     def error_callback(self, bot, update, error):
         logger.exception(error)
+        self.stderr.write(error)
+        self.stderr.write("\n")
 
     def start_callback(self, bot, update):
         user = update.effective_user
         chat = update.effective_chat
 
+        msg = 'Start for {name}'.format(name=user.first_name)
         if logger.isEnabledFor(logging.INFO):
-            logger.info('Start for {name}'.format(name=user.first_name))
+            logger.info(msg)
+        self.stdout.write(msg)
+        self.stdout.write("\n")
 
         message = _('Hi *{name}* this chat is not registered\n').format(name=user.first_name)
         message += _('Chat "{type}" code: "*{id}*"\n\n').format(id=chat.id, type=chat.type)
@@ -71,9 +77,12 @@ class Command(BaseCommand):
         update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
 
     def help_callback(self, bot, update):
+        user = update.effective_user
+        msg = 'Help for {name}'.format(name=user.first_name)
         if logger.isEnabledFor(logging.INFO):
-            user = update.effective_user
-            logger.info('Help for {name}'.format(name=user.first_name))
+            logger.info(msg)
+        self.stdout.write(msg)
+        self.stdout.write("\n")
         message = _("/help -> _This message_\n")
         message += _("/start -> _Check if the chat are registered_\n")
         message += _("/setas -> _KeyPad for get data from some seta_\n")
@@ -83,9 +92,12 @@ class Command(BaseCommand):
     def list_callback(self, bot, update):
         chat = update.effective_chat
         command = update.effective_message.text
+        user = update.effective_user
+        msg = 'List {cmd} for {name}'.format(cmd=command, name=user.first_name)
         if logger.isEnabledFor(logging.INFO):
-            user = update.effective_user
-            logger.info('List {cmd} for {name}'.format(cmd=command, name=user.first_name))
+            logger.info(msg)
+        self.stdout.write(msg)
+        self.stdout.write("\n")
         if not RemoteChat.objects.allowed(chat):
             bot.send_message(chat.id, _('Not registered'))
         else:
@@ -94,8 +106,11 @@ class Command(BaseCommand):
             elif command.startswith('/sensor'):
                 clase = 'sensor'
             else:
+                msg = 'Invalid command {command}'.format(command=command)
                 if logger.isEnabledFor(logging.ERROR):
-                    logger.error('Invalid command {command}'.format(command=command))
+                    logger.error(msg)
+                self.stderr.write(msg)
+                self.stderr.write("\n")
                 return
 
             if str(chat.id) in self.stack_keypads:
@@ -176,6 +191,8 @@ class Command(BaseCommand):
 
         if message:
             logger.info(message)
+            self.stdout.write(message)
+            self.stdout.write("\n")
             bot.send_message(chat.id, message)
 
     def get_pad(self, clase, page, chat):
