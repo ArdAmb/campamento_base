@@ -151,7 +151,7 @@ class BulkAPIView(mixins.CreateModelMixin,
                     'application/vnd.ms-excel',
                     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                 ]:
-                    file_data = pd.read_excel(f)
+                    pass  # file_data = pd.read_excel(f) Not supported
                 elif content_type == 'application/vnd.oasis.opendocument.spreadsheet':
                     pass  # .ods Not supported
 
@@ -159,7 +159,6 @@ class BulkAPIView(mixins.CreateModelMixin,
                     raise FileWrongException()
                 wrong_columns = []
                 has_date = False
-                import ipdb; ipdb.set_trace()
                 for key in file_data.columns:
                     if key != seta.date_column:
                         if not seta.sensors.filter(name=key).exists():
