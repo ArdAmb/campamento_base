@@ -8,3 +8,4 @@ Pygments==2.2.0
 Markdown==2.6.9
 ipaddress==1.0.18
 python-telegram-bot==7.0.1
+pandas==0.20.3

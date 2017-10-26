@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.utils.translation import ugettext as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, mixins, generics, status
 from rest_framework.authentication import BasicAuthentication
@@ -11,6 +12,8 @@ from rest_framework.parsers import MultiPartParser
 from base.authentication import CsrfExemptSessionAuthentication
 from base.permissions import *
 from base.serializers import *
+from base.exceptions import *
+import pandas as pd
 
 
 class SensorViewSet(viewsets.ReadOnlyModelViewSet):
@@ -125,11 +128,65 @@ class BulkAPIView(mixins.CreateModelMixin,
 
     def create(self, request, *args, **kwargs):
         try:
-            #TODO check file format
+            seta = generics.get_object_or_404(Seta, pk=kwargs.get('seta_pk'))
+
+            f = request.data.get('datos')
+
+            if seta.check_bulk:
+                content_type = 'text/plain'
+                if hasattr(f, 'content_type'):
+                    content_type = f.content_type
+                file_data = None
+                if content_type in ['text/csv', 'text/plain']:
+                    options = {
+                        'sep': seta.separator,
+                        'decimal': seta.decimal,
+                    }
+                    if seta.date_parse:
+                        options['parse_dates'] = False  # Not used in this point
+                        options['date_parser'] = seta.date_parse
+
+                    file_data = pd.read_csv(f, **options)
+                elif content_type in [
+                    'application/vnd.ms-excel',
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                ]:
+                    file_data = pd.read_excel(f)
+                elif content_type == 'application/vnd.oasis.opendocument.spreadsheet':
+                    pass  # .ods Not supported
+
+                if file_data is None:
+                    raise FileWrongException()
+                wrong_columns = []
+                has_date = False
+                import ipdb; ipdb.set_trace()
+                for key in file_data.columns:
+                    if key != seta.date_column:
+                        if not seta.sensors.filter(name=key).exists():
+                            wrong_columns.append(key)
+                    else:
+                        has_date = True
+                if not has_date and seta.date_parse:
+                    if wrong_columns:
+                        raise FileWrongColumnsException(
+                            _('Columns date requited and columns "{columns_name}" have wrong sensor name').format(
+                                columns_name=','.join(wrong_columns)
+                            )
+                        )
+                    else:
+                        raise FileWrongColumnsException(_('Columns date requited'))
+
+                if wrong_columns:
+                    raise FileWrongColumnsException(
+                        _('Columns "{columns_name}" have wrong sensor name').format(
+                            columns_name=','.join(wrong_columns)
+                        )
+                    )
+
             serializer = self.get_serializer(
                 BulkData.objects.create(
-                    seta_id=kwargs.get('seta_pk'),
-                    datos=request.data.get('datos')
+                    seta=seta,
+                    datos=f
                 ),
                 context={'request': request}
             )
@@ -138,4 +195,3 @@ class BulkAPIView(mixins.CreateModelMixin,
         except Seta.DoesNotExist:
             response_status = status.HTTP_404_NOT_FOUND
             return Response({'seta': 'Not found'}, status=response_status)
-

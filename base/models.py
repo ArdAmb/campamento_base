@@ -28,6 +28,32 @@ class Seta(models.Model):
     name = models.CharField(max_length=512)
     sensors = models.ManyToManyField(Sensor)
 
+    check_bulk = models.BooleanField(
+        default=False,
+        help_text=_('Check the columns when bulk file is uploaded (you could lost information)')
+    )
+    separator = models.CharField(
+        max_length=1,
+        default=';',
+        help_text=_('Separator used into the bulk file, for CSV')
+    )
+    date_parse = models.CharField(
+        max_length=16,
+        default='',
+        blank=True,
+        help_text=_('Date format used into the bulk file, for CSV (required for parse the file)')
+    )
+    date_column = models.CharField(
+        max_length=32,
+        default='date',
+        help_text=_('Date name column used into the bulk file, for CSV')
+    )
+    decimal = models.CharField(
+        max_length=1,
+        default=',',
+        help_text=_('Decimal separator used into the bulk file, for CSV')
+    )
+
     def __str__(self):
         return self.name
 
