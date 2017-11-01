@@ -93,8 +93,17 @@ class ValueCreateTestCase(TestCase):
         self.assertIn('value', response_json)
         self.assertEqual(response_json['value'], 'value')
 
-    def test_create_with_pk(self):
+
+class ValueCreateWithLoginTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_superuser('admin', 'admin@test.com', 'admin')
         self.client.login(username='admin', password='admin')
+        self.sensor = Sensor.objects.create(name="sensor")
+        self.seta = Seta.objects.create(name="seta")
+        self.seta.sensors.add(self.sensor)
+
+    def test_create_with_pk(self):
         response = self.client.post('/api/value/', {
             'seta.pk': self.seta.name,
             'sensor.pk': self.sensor.name,
@@ -108,7 +117,6 @@ class ValueCreateTestCase(TestCase):
         self.assertIn('name', response_json['seta'])
 
     def test_create_without_dot_name(self):
-        self.client.login(username='admin', password='admin')
         response = self.client.post('/api/value/', {
             'seta': self.seta.name,
             'sensor': self.sensor.name,
@@ -125,7 +133,6 @@ class ValueCreateTestCase(TestCase):
         self.seta.check_value = True
         self.seta.save()
 
-        self.client.login(username='admin', password='admin')
         response = self.client.post('/api/value/', {
             'seta.name': self.seta.name,
             'sensor.name': self.sensor.name,
@@ -137,7 +144,6 @@ class ValueCreateTestCase(TestCase):
 
     def test_create_seta_collision(self):
         Seta.objects.create(name=self.seta.name)
-        self.client.login(username='admin', password='admin')
         response = self.client.post('/api/value/', {
             'seta.name': self.seta.name,
             'sensor.name': self.sensor.name,
@@ -149,7 +155,6 @@ class ValueCreateTestCase(TestCase):
         self.assertEqual(response_json['seta'], 'Multiples options')
 
     def test_create_no_seta(self):
-        self.client.login(username='admin', password='admin')
         response = self.client.post('/api/value/', {
             'seta.name': 'no exist',
             'sensor.name': self.sensor.name,
@@ -162,7 +167,6 @@ class ValueCreateTestCase(TestCase):
 
     def test_create_sensor_collision(self):
         Sensor.objects.create(name=self.sensor.name)
-        self.client.login(username='admin', password='admin')
         response = self.client.post('/api/value/', {
             'seta.name': self.seta.name,
             'sensor.name': self.sensor.name,
@@ -174,7 +178,6 @@ class ValueCreateTestCase(TestCase):
         self.assertEqual(response_json['sensor'], 'Multiples options')
 
     def test_create_no_sensor(self):
-        self.client.login(username='admin', password='admin')
         response = self.client.post('/api/value/', {
             'seta.name': self.seta.name,
             'sensor.name': 'no exist',
@@ -188,7 +191,6 @@ class ValueCreateTestCase(TestCase):
     def test_create_wrong_sensor(self):
         self.seta.sensors.remove(self.sensor)
 
-        self.client.login(username='admin', password='admin')
         response = self.client.post('/api/value/', {
             'seta.name': self.seta.name,
             'sensor.name': self.sensor.name,
