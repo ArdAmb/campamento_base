@@ -57,8 +57,11 @@ class Command(BaseCommand):
 
     def error_callback(self, bot, update, error):
         logger.exception(error)
-        self.stderr.write(error)
-        self.stderr.write("\n")
+        try:
+            self.stderr.write(str(error))
+            self.stderr.write("\n")
+        except:
+            pass
 
     def start_callback(self, bot, update):
         user = update.effective_user
