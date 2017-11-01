@@ -28,6 +28,11 @@ class Seta(models.Model):
     name = models.CharField(max_length=512)
     sensors = models.ManyToManyField(Sensor)
 
+    check_value = models.BooleanField(
+        default=False,
+        help_text=_('Check the value stored for the sensors (you could lost information)')
+    )
+
     check_bulk = models.BooleanField(
         default=False,
         help_text=_('Check the columns when bulk file is uploaded (you could lost information)')

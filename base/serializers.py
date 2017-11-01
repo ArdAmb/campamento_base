@@ -5,7 +5,7 @@ import logging
 
 from django.utils.translation import ugettext as _
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
+#from rest_framework.exceptions import ValidationError
 
 from base.models import *
 
@@ -63,7 +63,9 @@ class ValueSensorSetaSerializer(serializers.HyperlinkedModelSerializer):
         fields = '__all__'
 
     def is_valid(self, raise_exception=False):
-        sensor = self.initial_data.get('sensor')
+        serializers.HyperlinkedModelSerializer.is_valid(self, raise_exception=raise_exception)
+
+        sensor = self.validated_data['sensor']
         sensores = None
         num_sensores = 0
         if sensor:
@@ -72,7 +74,7 @@ class ValueSensorSetaSerializer(serializers.HyperlinkedModelSerializer):
             if num_sensores == 1:
                 self.fields['sensor'].instance = sensores.get()
 
-        seta = self.initial_data.get('seta')
+        seta = self.validated_data['seta']
         setas = None
         num_setas = 0
         if seta:
@@ -81,37 +83,42 @@ class ValueSensorSetaSerializer(serializers.HyperlinkedModelSerializer):
             if num_setas == 1:
                 self.fields['seta'].instance = setas.get()
 
-        try:
-            serializers.HyperlinkedModelSerializer.is_valid(self, raise_exception=raise_exception)
-        except ValidationError, ex:
-            if hasattr(ex, 'detail'):
-                if ex.detail.get('seta') and setas is not None:
-                    if num_setas > 1:
-                        ex.detail['seta'] = [_('Multiples options')]
-                    elif num_setas == 0:
-                        ex.detail['seta'] = [_('Not found')]
-                if ex.detail.get('sensor') and sensores is not None:
-                    if num_sensores > 1:
-                        ex.detail['sensor'] = [_('Multiples options')]
-                    elif num_sensores == 0:
-                        ex.detail['sensor'] = [_('Not found')]
-            raise ex
+        if setas is not None:
+            if num_setas > 1:
+                self._errors['seta'] = _('Multiples options')
+            elif num_setas == 0:
+                self._errors['seta'] = _('Not found')
+        if sensores is not None:
+            if num_sensores > 1:
+                self._errors['sensor'] = _('Multiples options')
+            elif num_sensores == 0:
+                self._errors['sensor'] = _('Not found')
 
         seta = self.fields['seta'].instance
         sensor = self.fields['sensor'].instance
         if seta and sensor:
             has_sensor = seta.sensors.filter(pk=sensor.pk)
             if not has_sensor.exists():
-                self._errors = {'seta': [_('Sensor "{}" not supported').format(sensor.name)]}
+                self._errors['seta'] = _('Sensor "{}" not supported').format(sensor.name)
                 logger.error('Sensor "{}" not supported for {}'.format(sensor.name, seta.name))
 
             self.validated_data['seta'] = self.fields['seta'].instance
             self.validated_data['sensor'] = self.fields['sensor'].instance
 
-        # TODO debemos validar el valor segun el dato o es mejor guardarlo?
+        if seta and seta.check_value and sensor.sensor_type != TYPE_STRING:
+            value = self.validated_data['value']
+            try:
+                if sensor.sensor_type == TYPE_INT:
+                    int(value)
+                elif sensor.sensor_type == TYPE_FLOAT:
+                    float(value)
+            except (ValueError, TypeError):
+                error_text = _('Sensor "{}" not support the data "{}"').format(sensor.name, value)
+                self._errors['value'] = error_text
+                logger.error(error_text)
 
         if self._errors and raise_exception:
-            raise ValidationError(self.errors)
+            raise serializers.ValidationError(self.errors)
 
         return not bool(self._errors)
 
