@@ -65,6 +65,7 @@ class MultipleValuesAPIView(generics.GenericAPIView):
             'created': [],
             'errors': {}
         }
+        seta = None
         try:
             seta = Seta.objects.get(pk=kwargs.get('seta_pk'))
             for key in request.data:
@@ -93,7 +94,10 @@ class MultipleValuesAPIView(generics.GenericAPIView):
             many=True, context={'request': request}
         )
         response['created'] = serializer.data
-        if response['errors']:
+        if not response['created']:
+            if seta:
+                response_status = status.HTTP_400_BAD_REQUEST
+        elif response['errors']:
             response_status = status.HTTP_202_ACCEPTED
         return Response(response, status=response_status)
 
