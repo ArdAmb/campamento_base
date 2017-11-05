@@ -1,0 +1,5 @@
+[run]
+omit=manage.py,*/management/*,*/migrations/*,campamento/*,base/apps.py
+
+[report]
+skip_covered=True
