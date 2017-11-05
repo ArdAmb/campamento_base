@@ -94,6 +94,105 @@ class ValueCreateTestCase(TestCase):
         self.assertEqual(response_json['value'], 'value')
 
 
+class ValueNetCreateTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_superuser('admin', 'admin@test.com', 'admin')
+        self.sensor = Sensor.objects.create(name="sensor")
+        self.seta = Seta.objects.create(name="seta")
+        self.seta.sensors.add(self.sensor)
+
+    def check_response(self, response_json):
+        self.assertIn('url', response_json)
+        self.assertIn('sensor', response_json)
+        self.assertIn('name', response_json['sensor'])
+        self.assertEqual(response_json['sensor']['name'], self.sensor.name)
+        self.assertIn('url', response_json['sensor'])
+        self.assertIn('seta', response_json)
+        self.assertIn('name', response_json['seta'])
+        self.assertEqual(response_json['seta']['name'], self.seta.name)
+        self.assertIn('url', response_json['seta'])
+        self.assertIn('date', response_json)
+        self.assertIn('value', response_json)
+        self.assertEqual(response_json['value'], 'value')
+
+    def test_create_local(self):
+        with self.settings(LOCAL_NETWORK='127.0.0.0/31'):
+            response = self.client.post('/api/value/', {
+                'seta.name': self.seta.name,
+                'sensor.name': self.sensor.name,
+                'value': 'value'
+            })
+            self.assertEqual(response.status_code, 201)
+            self.check_response(response.json())
+
+    def test_create_proxy_without_ip(self):
+        with self.settings(
+                LOCAL_NETWORK='192.168.0.0/24',
+                ALLOW_PROXY=True,
+                READ_PROXY_IP=False
+        ):
+            response = self.client.post('/api/value/', {
+                'seta.name': self.seta.name,
+                'sensor.name': self.sensor.name,
+                'value': 'value'
+            }, HTTP_X_FORWARDED_FOR='192.168.0.1')
+            self.assertEqual(response.status_code, 403)
+
+    def test_create_without_ip_nor_proxy(self):
+        with self.settings(
+                LOCAL_NETWORK='192.168.0.0/24',
+                ALLOW_PROXY=False,
+                READ_PROXY_IP=False
+        ):
+            response = self.client.post('/api/value/', {
+                'seta.name': self.seta.name,
+                'sensor.name': self.sensor.name,
+                'value': 'value'
+            }, HTTP_X_FORWARDED_FOR='192.168.0.1')
+            self.assertEqual(response.status_code, 403)
+
+    def test_create_without_proxy(self):
+        with self.settings(
+                LOCAL_NETWORK='192.168.0.0/24',
+                ALLOW_PROXY=False,
+                READ_PROXY_IP=True
+        ):
+            response = self.client.post('/api/value/', {
+                'seta.name': self.seta.name,
+                'sensor.name': self.sensor.name,
+                'value': 'value'
+            }, HTTP_X_FORWARDED_FOR='192.168.0.1')
+            self.assertEqual(response.status_code, 403)
+
+    def test_create_with_only_ip(self):
+        with self.settings(
+                LOCAL_NETWORK='192.168.0.0/24',
+                READ_PROXY_IP=True
+        ):
+            response = self.client.post('/api/value/', {
+                'seta.name': self.seta.name,
+                'sensor.name': self.sensor.name,
+                'value': 'value'
+            }, HTTP_X_FORWARDED_FOR='192.168.0.1')
+            self.assertEqual(response.status_code, 201)
+            self.check_response(response.json())
+
+    def test_create_with_ip_and_proxy(self):
+        with self.settings(
+                LOCAL_NETWORK='192.168.0.0/24',
+                ALLOW_PROXY=True,
+                READ_PROXY_IP=True
+        ):
+            response = self.client.post('/api/value/', {
+                'seta.name': self.seta.name,
+                'sensor.name': self.sensor.name,
+                'value': 'value'
+            }, HTTP_X_FORWARDED_FOR='192.168.0.1')
+            self.assertEqual(response.status_code, 201)
+            self.check_response(response.json())
+
+
 class ValueCreateWithLoginTestCase(TestCase):
     def setUp(self):
         self.client = Client()
