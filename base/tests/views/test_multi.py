@@ -20,14 +20,15 @@ class MultiValueCreateTestCase(TestCase):
         self.seta.sensors.add(self.sensor_extra)
 
     def test_create(self):
-        query = ValueSensorSeta.objects.filter(seta=self.seta, sensor=self.sensor, value='value')
-        self.assertEqual(query.count(), 0)
-        response = self.client.post('/api/multi/{}/'.format(self.seta.pk), {
-            self.sensor.name: 'value'
-        })
-        self.assertEqual(response.status_code, 403)
-        response_json = response.json()
-        self.assertIn('detail', response_json)
+        with self.settings(LOCAL_NETWORK='192.168.0.0/24'):
+            query = ValueSensorSeta.objects.filter(seta=self.seta, sensor=self.sensor, value='value')
+            self.assertEqual(query.count(), 0)
+            response = self.client.post('/api/multi/{}/'.format(self.seta.pk), {
+                self.sensor.name: 'value'
+            })
+            self.assertEqual(response.status_code, 403)
+            response_json = response.json()
+            self.assertIn('detail', response_json)
 
     def test_create_one_login(self):
         self.client.login(username='admin', password='admin')

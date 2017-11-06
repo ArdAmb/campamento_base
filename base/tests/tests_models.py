@@ -46,6 +46,7 @@ class ValueSensorSetaTestCase(TestCase):
         value = ValueSensorSeta.objects.get(pk=value.pk)
         self.assertEqual(value.get_value(), real_value)
         self.assertEqual(value.value, str(real_value))
+        self.assertEqual(str(value), str(real_value))
 
     def test_float_sensor(self):
         sensor = Sensor.objects.create(name="float", sensor_type=TYPE_FLOAT)

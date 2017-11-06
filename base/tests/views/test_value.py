@@ -17,10 +17,11 @@ class ValueDeleteTestCase(TestCase):
         self.value = ValueSensorSeta.objects.create(seta=self.seta, sensor=self.sensor, value='value')
 
     def test_delete(self):
-        response = self.client.delete('/api/value/{}/'.format(self.value.pk))
-        self.assertEqual(response.status_code, 403)
-        response_json = response.json()
-        self.assertIn('detail', response_json)
+        with self.settings(LOCAL_NETWORK='192.168.0.0/24'):
+            response = self.client.delete('/api/value/{}/'.format(self.value.pk))
+            self.assertEqual(response.status_code, 403)
+            response_json = response.json()
+            self.assertIn('detail', response_json)
 
     def test_delete_login(self):
         self.client.login(username='admin', password='admin')
@@ -40,10 +41,11 @@ class ValueUpdateTestCase(TestCase):
         self.value = ValueSensorSeta.objects.create(seta=self.seta, sensor=self.sensor, value='value')
 
     def test_update(self):
-        response = self.client.put('/api/value/{}/'.format(self.value.pk), {'value': 'new_val'})
-        self.assertEqual(response.status_code, 403)
-        response_json = response.json()
-        self.assertIn('detail', response_json)
+        with self.settings(LOCAL_NETWORK='192.168.0.0/24'):
+            response = self.client.put('/api/value/{}/'.format(self.value.pk), {'value': 'new_val'})
+            self.assertEqual(response.status_code, 403)
+            response_json = response.json()
+            self.assertIn('detail', response_json)
 
     def test_update_login(self):
         self.client.login(username='admin', password='admin')
@@ -61,37 +63,39 @@ class ValueCreateTestCase(TestCase):
         self.seta = Seta.objects.create(name="seta")
         self.seta.sensors.add(self.sensor)
 
-    def test_create(self):
-        response = self.client.post('/api/value/', {
-            'seta': self.seta,
-            'sensor': self.sensor,
-            'value': 'value'
-        })
-        self.assertEqual(response.status_code, 403)
-        response_json = response.json()
-        self.assertIn('detail', response_json)
+    def test_create_no_net(self):
+        with self.settings(LOCAL_NETWORK='192.168.0.0/24'):
+            response = self.client.post('/api/value/', {
+                'seta': self.seta,
+                'sensor': self.sensor,
+                'value': 'value'
+            })
+            self.assertEqual(response.status_code, 403)
+            response_json = response.json()
+            self.assertIn('detail', response_json)
 
-    def test_create_login(self):
-        self.client.login(username='admin', password='admin')
-        response = self.client.post('/api/value/', {
-            'seta.name': self.seta.name,
-            'sensor.name': self.sensor.name,
-            'value': 'value'
-        })
-        self.assertEqual(response.status_code, 201)
-        response_json = response.json()
-        self.assertIn('url', response_json)
-        self.assertIn('sensor', response_json)
-        self.assertIn('name', response_json['sensor'])
-        self.assertEqual(response_json['sensor']['name'], self.sensor.name)
-        self.assertIn('url', response_json['sensor'])
-        self.assertIn('seta', response_json)
-        self.assertIn('name', response_json['seta'])
-        self.assertEqual(response_json['seta']['name'], self.seta.name)
-        self.assertIn('url', response_json['seta'])
-        self.assertIn('date', response_json)
-        self.assertIn('value', response_json)
-        self.assertEqual(response_json['value'], 'value')
+    def test_create_no_net_login(self):
+        with self.settings(LOCAL_NETWORK='192.168.0.0/24'):
+            self.client.login(username='admin', password='admin')
+            response = self.client.post('/api/value/', {
+                'seta.name': self.seta.name,
+                'sensor.name': self.sensor.name,
+                'value': 'value'
+            })
+            self.assertEqual(response.status_code, 201)
+            response_json = response.json()
+            self.assertIn('url', response_json)
+            self.assertIn('sensor', response_json)
+            self.assertIn('name', response_json['sensor'])
+            self.assertEqual(response_json['sensor']['name'], self.sensor.name)
+            self.assertIn('url', response_json['sensor'])
+            self.assertIn('seta', response_json)
+            self.assertIn('name', response_json['seta'])
+            self.assertEqual(response_json['seta']['name'], self.seta.name)
+            self.assertIn('url', response_json['seta'])
+            self.assertIn('date', response_json)
+            self.assertIn('value', response_json)
+            self.assertEqual(response_json['value'], 'value')
 
 
 class ValueNetCreateTestCase(TestCase):
@@ -309,10 +313,11 @@ class ValueListTestCase(TestCase):
         self.seta.sensors.add(self.sensor)
 
     def test_list_no_login(self):
-        response = self.client.get('/api/value/')
-        self.assertEqual(response.status_code, 403)
-        response_json = response.json()
-        self.assertIn('detail', response_json)
+        with self.settings(LOCAL_NETWORK='192.168.0.0/24'):
+            response = self.client.get('/api/value/')
+            self.assertEqual(response.status_code, 403)
+            response_json = response.json()
+            self.assertIn('detail', response_json)
 
     def test_list_empty(self):
         self.client.login(username='admin', password='admin')

@@ -44,7 +44,9 @@ INSTALLED_APPS = [
     'base.remote',
 ]
 
-LOCAL_NETWORK = '192.168.0.0/24'
+# LOCAL_NETWORK = '192.168.0.0/24'
+# ALLOW_PROXY = True
+# READ_PROXY_IP = True
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
